@@ -259,7 +259,7 @@ public final class List<T: RealmCollectionValue>: ListBase {
 
      - parameter property: The name of a property whose average value should be calculated.
      */
-    public func average<U: AddableType>(ofProperty property: String) -> U? {
+    public func average(ofProperty property: String) -> Double? {
         return _rlmArray.average(ofProperty: property).map(dynamicBridgeCast)
     }
 

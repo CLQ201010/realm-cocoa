@@ -331,7 +331,7 @@ public protocol RealmCollection: RealmCollectionBase {
 
      - parameter property: The name of a property whose values should be summed.
      */
-    func average<U: AddableType>(ofProperty property: String) -> U?
+    func average(ofProperty property: String) -> Double?
 
 
     // MARK: Key-Value Coding
@@ -434,16 +434,48 @@ public extension RealmCollection where Element: MinMaxType {
     }
 }
 
+public protocol OptionalProtocol {
+    associatedtype Wrapped
+    func _rlmInferWrappedType() -> Wrapped
+}
+extension Optional: OptionalProtocol {
+    public func _rlmInferWrappedType() -> Wrapped { return self! }
+}
+
+public extension RealmCollection where Element: OptionalProtocol, Element.Wrapped: MinMaxType {
+    public func min() -> Element.Wrapped? {
+        return min(ofProperty: "self")
+    }
+    public func max() -> Element.Wrapped? {
+        return max(ofProperty: "self")
+    }
+}
+
 public extension RealmCollection where Element: AddableType {
     public func sum() -> Element {
         return sum(ofProperty: "self")
     }
-    public func average() -> Element? {
+    public func average() -> Double? {
+        return average(ofProperty: "self")
+    }
+}
+
+public extension RealmCollection where Element: OptionalProtocol, Element.Wrapped: AddableType {
+    public func sum() -> Element.Wrapped {
+        return sum(ofProperty: "self")
+    }
+    public func average() -> Double? {
         return average(ofProperty: "self")
     }
 }
 
 public extension RealmCollection where Element: Comparable {
+    public func sorted(ascending: Bool = true) -> Results<Element> {
+        return sorted(byKeyPath: "self", ascending: ascending)
+    }
+}
+
+public extension RealmCollection where Element: OptionalProtocol, Element.Wrapped: Comparable {
     public func sorted(ascending: Bool = true) -> Results<Element> {
         return sorted(byKeyPath: "self", ascending: ascending)
     }
@@ -468,7 +500,7 @@ private class _AnyRealmCollectionBase<T: RealmCollectionValue>: AssistedObjectiv
     func min<U: MinMaxType>(ofProperty property: String) -> U? { fatalError() }
     func max<U: MinMaxType>(ofProperty property: String) -> U? { fatalError() }
     func sum<U: AddableType>(ofProperty property: String) -> U { fatalError() }
-    func average<U: AddableType>(ofProperty property: String) -> U? { fatalError() }
+    func average(ofProperty property: String) -> Double? { fatalError() }
     subscript(position: Int) -> Element { fatalError() }
     func makeIterator() -> RLMIterator<T> { fatalError() }
     var startIndex: Int { fatalError() }
@@ -540,7 +572,7 @@ private final class _AnyRealmCollection<C: RealmCollection>: _AnyRealmCollection
         return base.sum(ofProperty: property)
     }
 
-    override func average<U: AddableType>(ofProperty property: String) -> U? {
+    override func average(ofProperty property: String) -> Double? {
         return base.average(ofProperty: property)
     }
 
@@ -766,7 +798,7 @@ public final class AnyRealmCollection<T: RealmCollectionValue>: RealmCollection 
 
      - parameter property: The name of a property whose average value should be calculated.
      */
-    public func average<U: AddableType>(ofProperty property: String) -> U? { return base.average(ofProperty: property) }
+    public func average(ofProperty property: String) -> Double? { return base.average(ofProperty: property) }
 
 
     // MARK: Sequence Support
